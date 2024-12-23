@@ -1,0 +1,46 @@
+#include <vector>
+#include <iostream>
+#include <algorithm>
+#include <numeric> // For accumulate
+#include <functional> // For function
+
+using namespace std;
+
+int minimumTimeRequired(vector<int>& jobs, int k) {
+    vector<int> workers(k, 0);
+    int n = jobs.size();
+    sort(jobs.rbegin(), jobs.rend()); // Sort jobs in descending order
+
+    // Helper function using lambda
+    function<bool(int, int)> canDistribute = [&](int idx, int limit) {
+        if (idx == n) return true;
+        for (int i = 0; i < k; ++i) {
+            if (workers[i] + jobs[idx] <= limit) {
+                workers[i] += jobs[idx];
+                if (canDistribute(idx + 1, limit)) return true;
+                workers[i] -= jobs[idx];
+            }
+            if (workers[i] == 0) break; // Prune redundant cases
+        }
+        return false;
+    };
+
+    int left = jobs[0], right = accumulate(jobs.begin(), jobs.end(), 0);
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        if (canDistribute(0, mid)) {
+            right = mid;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return left;
+}
+
+int main() {
+    vector<int> jobs1 = {3, 2, 3};
+    vector<int> jobs2 = {1, 2, 4, 7, 8};
+    cout << minimumTimeRequired(jobs1, 3) << endl; // Output: 3
+    cout << minimumTimeRequired(jobs2, 2) << endl; // Output: 11
+    return 0;
+}
